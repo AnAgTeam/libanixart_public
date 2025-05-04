@@ -11,5 +11,5 @@
 *.vcxproj.user
 
 /GeneralTest/Secrets.hpp
-/libanixart/libanixart/src/ApiRequestsAuth.cpp
+/libanixart/src/ApiRequestsAuth.cpp
 #/libanixart/libanixart/include/anixart/ApiRequestsAuth.hpp
