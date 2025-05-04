@@ -1,0 +1,31 @@
+#include <anixart/ApiRequests.hpp>
+#include <netsess/StringTools.hpp>
+
+namespace anixart::requests {
+    using network::StringTools;
+
+    namespace auth {
+        ApiPostRequest firebase(const std::string& token);
+
+        ApiPostRequest restore(const std::string& email_or_login);
+
+        ApiPostRequest restore_resend(const std::string& email_or_login, const std::string& password, const std::string& hash);
+
+        ApiPostRequest restore_verify(const std::string& email_or_login, const std::string& password, const std::string& hash, const std::string& code);
+
+        ApiPostRequest sign_in(const std::string& login, const std::string& password);
+
+        ApiPostRequest sign_in_google(const std::string& google_id_token);
+
+        ApiPostRequest sign_in_vk(const std::string& vk_access_token);
+
+        ApiPostRequest sign_up(const std::string& login, const std::string& email, const std::string& password);
+
+        ApiPostRequest sign_up_google(const std::string& login, const std::string& email, const std::string& google_id_token);
+
+        ApiPostRequest sign_up_vk(const std::string& login, const std::string& email, const std::string& vk_access_token);
+
+        ApiPostRequest resend(const std::string& login, const std::string& email, const std::string& hash, std::string_view auth_key, const std::string& auth_value);
+
+        ApiPostRequest verify(const std::string& login, const std::string& email, const std::string& hash, const std::string& code, std::string_view auth_key, const std::string& auth_value);
+    };

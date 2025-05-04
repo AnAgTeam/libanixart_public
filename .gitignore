@@ -1,0 +1,15 @@
+/*.7z
+/.vs
+/libanixart/x64
+/libanixart/x86
+/GeneralTest/x64
+/GeneralTest/x86
+/ReleaseInfo/x64
+/ReleaseInfo/x86
+/x64
+/x86
+*.vcxproj.user
+
+/GeneralTest/Secrets.hpp
+/libanixart/libanixart/src/ApiRequestsAuth.cpp
+#/libanixart/libanixart/include/anixart/ApiRequestsAuth.hpp

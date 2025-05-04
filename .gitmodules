@@ -1,0 +1,6 @@
+[submodule "libaanetwork"]
+	path = libaanetwork
+	url = https://github.com/AnAgTeam/libaanetwork
+[submodule "libnetsess"]
+	path = libnetsess
+	url = https://github.com/AnAgTeam/libnetsess
