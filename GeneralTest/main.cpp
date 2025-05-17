@@ -16,7 +16,10 @@
 #include <io.h>
 #include <fcntl.h>
 
+#if __has_include("Secrets.hpp")
 #include "Secrets.hpp"
+#endif
+
 
 //#define PRINT_ALLOCATION_INFO
 
@@ -89,6 +92,7 @@ int main() {
         std::string token = "";
 #endif
         ProfileID my_profile_id(4032884);
+
         Api api("ru_RU", "libanixart", LIBANIXART_API_VERSION "-1");
         api.set_token(token);
         ApiSession& sess = api.get_session();
@@ -104,9 +108,9 @@ int main() {
         //    std::this_thread::sleep_for(2s);
         //}
 
-        auto test_resp = sess.api_request(requests::beta::profile::badge::edit(6, token));
+        //auto test_resp = sess.api_request(requests::beta::profile::badge::edit(6, token));
 
-        auto [my_profile, _] = api.profiles().get_profile(my_profile_id);
+        //auto [my_profile, _] = api.profiles().get_profile(my_profile_id);
 
         //std::vector<std::shared_ptr<FooBase>> bases = {
         //    std::dynamic_pointer_cast<FooBase>(std::make_shared<Foo>(2, 4))

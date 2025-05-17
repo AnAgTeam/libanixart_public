@@ -1,62 +1,20 @@
 #pragma once
+#include <anixart/ApiRequestsCoreTypes.hpp>
 #include <anixart/ApiRequestTypes.hpp>
+#if __has_include("anixart/ApiRequestsAuth.hpp")
 #include <anixart/ApiRequestsAuth.hpp>
+#endif
 #include <netsess/UrlSession.hpp>
 
 #include <string>
 #include <string_view>
 
-//#define LIBANIXART_AUTH_PRESENTED
-
 namespace anixart {
-	class ApiGetRequest {
-	public:
-		std::string sub_url;
-		network::UrlParameters params = network::UrlParameters();
-		std::vector<std::string> headers = {};
-	};
-	class ApiPostRequest {
-	public:
-		std::string sub_url;
-		network::UrlParameters params = network::UrlParameters();
-		std::vector<std::string> headers = {};
-		std::string data;
-		std::string_view type;
-	};
-	class ApiPostMultipartRequest {
-	public:
-		std::string sub_url;
-		network::UrlParameters params = network::UrlParameters();
-		std::vector<std::string> headers = {};
-		network::MultipartForms forms;
-	};
 
 	namespace requests {
 		extern const std::string_view base_url;
 		extern const std::string_view base_url_alt;
 
-#ifdef LIBANIXART_AUTH_PRESENTED
-		// Sources of these functions is declared in ApiRequestsAuth.cpp
-		namespace auth {
-			extern ApiPostRequest firebase(const std::string& token);
-			extern ApiPostRequest restore(const std::string& email_or_login);
-			extern ApiPostRequest restore_resend(const std::string& email_or_login, const std::string& password, const std::string& hash);
-			extern ApiPostRequest restore_verify(const std::string& email_or_login, const std::string& password, const std::string& hash, const std::string& code);
-			extern ApiPostRequest sign_in(const std::string& login, const std::string& password);
-			extern ApiPostRequest sign_in_google(const std::string& google_id_token);
-			extern ApiPostRequest sign_in_vk(const std::string& vk_access_token);
-			extern ApiPostRequest sign_up(const std::string& login, const std::string& email, const std::string& password);
-			extern ApiPostRequest sign_up_google(const std::string& login, const std::string& email, const std::string& google_id_token);
-			extern ApiPostRequest sign_up_vk(const std::string& login, const std::string& email, const std::string& vk_access_token);
-			struct AuthKeys {
-				static constexpr std::string_view password = "password";
-				static constexpr std::string_view google = "googleIdToken";
-				static constexpr std::string_view vk = "vkAccessToken";
-			};
-			extern ApiPostRequest resend(const std::string& login, const std::string& email, const std::string& hash, std::string_view auth_key, const std::string& auth_value);
-			extern ApiPostRequest verify(const std::string& login, const std::string& email, const std::string& hash, const std::string& code, std::string_view auth_key, const std::string& auth_value);
-		};
-#endif
 		namespace collection {
 			extern ApiGetRequest collection(const int64_t collection_id, const std::string& token);
 			extern ApiGetRequest collections(const int32_t page, const int32_t previous_page, const int32_t where, const int32_t sort, const std::string& token);

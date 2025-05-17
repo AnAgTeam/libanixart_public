@@ -166,5 +166,8 @@
     <ClInclude Include="include\anixart\ApiRequestsAuth.hpp">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="include\anixart\ApiRequestsCoreTypes.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

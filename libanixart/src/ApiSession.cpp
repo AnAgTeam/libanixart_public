@@ -34,7 +34,7 @@ namespace anixart {
         _base_url = is_alt ? std::string(requests::base_url_alt) : std::string(requests::base_url);
     }
 
-    JsonObject ApiSession::api_request(const ApiPostRequest& request) const {
+    JsonObject ApiSession::api_request(const requests::ApiPostRequest& request) const {
         try {
             std::string response = post_request(_base_url + request.sub_url, request.data, request.type, request.headers, request.params);
             if (_is_verbose) {
@@ -53,7 +53,7 @@ namespace anixart {
         }
     }
 
-    JsonObject ApiSession::api_request(const ApiGetRequest& request) const {
+    JsonObject ApiSession::api_request(const requests::ApiGetRequest& request) const {
         try {
             std::string response = get_request(_base_url + request.sub_url, request.headers, request.params);
             if (_is_verbose) {
@@ -71,7 +71,7 @@ namespace anixart {
             throw ApiError();
         }
     }
-    JsonObject ApiSession::api_request(const ApiPostMultipartRequest& request) const {
+    JsonObject ApiSession::api_request(const requests::ApiPostMultipartRequest& request) const {
         try {
             std::string response = post_multipart_request(_base_url + request.sub_url, request.forms, request.params);
             if (_is_verbose) {

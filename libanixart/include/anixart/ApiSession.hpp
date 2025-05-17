@@ -12,9 +12,9 @@ namespace anixart {
 		void set_verbose(const bool api_verbose, const bool sess_verbose);
 		void switch_base_url(bool is_alt);
 
-		network::JsonObject api_request(const ApiPostRequest& request) const;
-		network::JsonObject api_request(const ApiGetRequest& request) const;
-		network::JsonObject api_request(const ApiPostMultipartRequest& request) const;
+		network::JsonObject api_request(const requests::ApiPostRequest& request) const;
+		network::JsonObject api_request(const requests::ApiGetRequest& request) const;
+		network::JsonObject api_request(const requests::ApiPostMultipartRequest& request) const;
 
 	private:
 		bool _is_verbose;

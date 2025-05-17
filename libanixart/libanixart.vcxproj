@@ -57,6 +57,7 @@
     <ClInclude Include="include\anixart\ApiReleases.hpp" />
     <ClInclude Include="include\anixart\ApiRequests.hpp" />
     <ClInclude Include="include\anixart\ApiRequestsAuth.hpp" />
+    <ClInclude Include="include\anixart\ApiRequestsCoreTypes.hpp" />
     <ClInclude Include="include\anixart\ApiRequestTypes.hpp" />
     <ClInclude Include="include\anixart\ApiSearch.hpp" />
     <ClInclude Include="include\anixart\ApiSession.hpp" />
