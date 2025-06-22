@@ -12,7 +12,8 @@ namespace anixart {
         _episodes(_session, _token),
         _profiles(_session, _token),
         _releases(_session, _token),
-        _collection(_session, _token)
+        _collections(_session, _token),
+        _articles(_session, _token)
     {
     }
 
@@ -55,7 +56,10 @@ namespace anixart {
     ApiReleases& Api::releases() {
         return _releases;
     }
-    ApiCollection& Api::collections() {
-        return _collection;
+    ApiCollections& Api::collections() {
+        return _collections;
+    }
+    ApiArticles& Api::articles() {
+        return _articles;
     }
 };

@@ -6,9 +6,12 @@
 /GeneralTest/x86
 /ReleaseInfo/x64
 /ReleaseInfo/x86
+/Sample-Test1/x64
+/Sample-Test1/x86
 /x64
 /x86
 *.vcxproj.user
+*.pch
 
 /GeneralTest/Secrets.hpp
 /libanixart/src/ApiRequestsAuth.cpp

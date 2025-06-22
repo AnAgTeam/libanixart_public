@@ -246,7 +246,7 @@ namespace anixart {
     }
 
     ProfileListPages::ProfileListPages(const ApiSession& session, const std::string& token, const int32_t page, const Profile::ListStatus status, const Profile::ListSort sort) :
-        Paginator<Release>(page),
+        EmptyContentPaginator<Release>(page),
         _session(session),
         _token(token),
         _tab(status),
@@ -259,7 +259,7 @@ namespace anixart {
     }
 
     ProfileListByProfilePages::ProfileListByProfilePages(const ApiSession& session, const std::string& token, const int32_t page, const ProfileID profile_id, const Profile::ListStatus status, const Profile::ListSort sort) :
-        Paginator<Release>(page),
+        EmptyContentPaginator<Release>(page),
         _session(session),
         _token(token),
         _profile_id(profile_id),
@@ -269,7 +269,7 @@ namespace anixart {
     }
 
     ProfileFavoriteReleasesPages::ProfileFavoriteReleasesPages(const ApiSession& session, const std::string& token, const int32_t page, const ProfileID profile_id, const Profile::ListSort sort, const int32_t filter_announce) :
-        Paginator<Release>(page),
+        EmptyContentPaginator<Release>(page),
         _session(session),
         _token(token),
         _profile_id(profile_id),
@@ -297,8 +297,8 @@ namespace anixart {
         return _session.api_request(requests::profile::releaseVote::all_release_unvoted(page, _token));
     }
 
-    AllReleaseVotedPages::AllReleaseVotedPages(const ApiSession& session, const std::string& token, const int32_t page, const ProfileID profile_id, const Release::ByVoteSort sort) :
-        Paginator<Release>(page),
+    ProfileVotedReleasesPages::ProfileVotedReleasesPages(const ApiSession& session, const std::string& token, const int32_t page, const ProfileID profile_id, const Release::ByVoteSort sort) :
+        EmptyContentPaginator<Release>(page),
         _session(session),
         _token(token),
         _profile_id(profile_id),
@@ -306,16 +306,28 @@ namespace anixart {
     {
     }
 
-    CachingJsonObject AllReleaseVotedPages::do_request(const int32_t page) const {
+    CachingJsonObject ProfileVotedReleasesPages::do_request(const int32_t page) const {
         return _session.api_request(requests::profile::releaseVote::all_release_voted(static_cast<int64_t>(_profile_id), page, static_cast<int32_t>(_sort), _token));
     }
 
-    ReleaseCommentsPages::ReleaseCommentsPages(const ApiSession& session, const std::string& token, const int32_t page, const ReleaseID release_id, const Comment::FilterBy filter_by) :
+    ReleaseRelatedPages::ReleaseRelatedPages(const ApiSession& session, const std::string& token, const int32_t page, const ReleaseRelatedID related_id) :
+        EmptyContentPaginator<Release>(page),
+        _session(session),
+        _token(token),
+        _related_id(related_id)
+    {
+    }
+
+    json::CachingJsonObject ReleaseRelatedPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::release::related::related(static_cast<int64_t>(_related_id), page, _token));
+    }
+
+    ReleaseCommentsPages::ReleaseCommentsPages(const ApiSession& session, const std::string& token, const int32_t page, const ReleaseID release_id, const Comment::Sort sort) :
         Paginator<Comment>(page),
         _session(session),
         _token(token),
         _release_id(release_id),
-        _sort(filter_by)
+        _sort(sort)
     {
     }
 
@@ -337,7 +349,7 @@ namespace anixart {
     }
 
     ReleaseCommentRepliesPages::ReleaseCommentRepliesPages(const ApiSession& session, const std::string& token, const int32_t page, const CommentID comment_id, const Comment::Sort sort) :
-        Paginator<Comment>(page),
+        OnePagePaginator<Comment>(page),
         _session(session),
         _token(token),
         _comment_id(comment_id),
@@ -408,7 +420,7 @@ namespace anixart {
     }
 
     HistoryPages::HistoryPages(const ApiSession& session, const std::string& token, const int32_t page) :
-        Paginator<Release>(page),
+        EmptyContentPaginator<Release>(page),
         _session(session),
         _token(token)
     {
@@ -419,7 +431,7 @@ namespace anixart {
     }
 
     CollectionsPages::CollectionsPages(const ApiSession& session, const std::string& token, const int32_t page, const int32_t where, const Collection::Sort sort) :
-        Paginator<Collection>(page),
+        EmptyContentPaginator<Collection>(page),
         _session(session),
         _token(token),
         _where(where),
@@ -457,7 +469,7 @@ namespace anixart {
     }
 
     CollectionReleasesPages::CollectionReleasesPages(const ApiSession& session, const std::string& token, const int32_t page, const CollectionID collection_id) :
-        Paginator<Release>(page),
+        EmptyContentPaginator<Release>(page),
         _session(session),
         _token(token),
         _collection_id(collection_id)
@@ -508,7 +520,7 @@ namespace anixart {
     }
 
     FavoriteCollectionsPages::FavoriteCollectionsPages(const ApiSession& session, const std::string& token, const int32_t page) :
-        Paginator<Collection>(page),
+        EmptyContentPaginator<Collection>(page),
         _session(session),
         _token(token)
     {
@@ -516,5 +528,208 @@ namespace anixart {
 
     CachingJsonObject FavoriteCollectionsPages::do_request(const int32_t page) const {
         return _session.api_request(requests::collection::favorite::favorites(page, _token));
+    }
+
+    ArticlesPages::ArticlesPages(const ApiSession& session, const std::string& token, const int32_t page, const requests::ArticlesFilterRequest& request) :
+        EmptyContentPaginator<Article>(page),
+        _session(session),
+        _token(token),
+        _request(request)
+
+    {
+    }
+
+    CachingJsonObject ArticlesPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::article::articles(page, _request, _token));
+    }
+
+    LatestArticlesPages::LatestArticlesPages(const ApiSession& session, const std::string& token, const int32_t page) :
+        EmptyContentPaginator<Article>(page),
+        _session(session),
+        _token(token)
+    {}
+
+    CachingJsonObject LatestArticlesPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::article::latest_articles(page, _token));
+    }
+
+    ArticleRepostsPages::ArticleRepostsPages(const ApiSession& session, const std::string& token, const int32_t page, const ArticleID article_id, const Sort sort) :
+        EmptyContentPaginator<Article>(page),
+        _session(session),
+        _token(token),
+        _article_id(article_id),
+        _sort(sort)
+    {}
+
+    CachingJsonObject ArticleRepostsPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::article::reposts(static_cast<int64_t>(_article_id), page, static_cast<int32_t>(_sort), _token));
+    }
+
+    ArticleVotesPages::ArticleVotesPages(const ApiSession& session, const std::string& token, const int32_t page, const ArticleID article_id, const Profile::VoteFilterBy filter_by) :
+        EmptyContentPaginator<Profile>(page),
+        _session(session),
+        _token(token),
+        _article_id(article_id),
+        _filter_by(filter_by)
+    {}
+
+    CachingJsonObject ArticleVotesPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::article::votes(static_cast<int64_t>(_article_id), page, static_cast<int32_t>(_filter_by), _token));
+    }
+
+    ArticleCommentsPages::ArticleCommentsPages(const ApiSession& session, const std::string& token, const int32_t page, const ArticleID article_id, const Comment::Sort sort) :
+        EmptyContentPaginator<Comment>(page),
+        _session(session),
+        _token(token),
+        _article_id(article_id),
+        _sort(sort)
+    {}
+
+    CachingJsonObject ArticleCommentsPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::article::comment::comments(static_cast<int64_t>(_article_id), page, static_cast<int32_t>(_sort), _token));
+    }
+
+    ArticlePopularCommentsPages::ArticlePopularCommentsPages(const ApiSession& session, const std::string& token, const ArticleID article_id) :
+        OnePagePaginator<Comment>(0),
+        _session(session),
+        _token(token),
+        _article_id(article_id)
+    {}
+
+    json::CachingJsonObject ArticlePopularCommentsPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::article::comment::comment_popular(static_cast<int64_t>(_article_id), _token));
+    }
+
+    ArticleCommentsByProfilePages::ArticleCommentsByProfilePages(const ApiSession& session, const std::string& token, const int32_t page, const ProfileID profile_id, const Comment::Sort sort) :
+        EmptyContentPaginator<Comment>(page),
+        _session(session),
+        _token(token),
+        _profile_id(profile_id),
+        _sort(sort)
+    {}
+
+    CachingJsonObject ArticleCommentsByProfilePages::do_request(const int32_t page) const {
+        return _session.api_request(requests::article::comment::profile_comments(static_cast<int64_t>(_profile_id), page, static_cast<int32_t>(_sort), _token));
+    }
+
+    ArticleCommentRepliesPages::ArticleCommentRepliesPages(const ApiSession& session, const std::string& token, const int32_t page, const CommentID comment_id, const Comment::Sort sort) :
+        OnePagePaginator<Comment>(page),
+        _session(session),
+        _token(token),
+        _comment_id(comment_id),
+        _sort(sort)
+    {}
+
+    CachingJsonObject ArticleCommentRepliesPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::article::comment::replies(static_cast<int64_t>(_comment_id), page, static_cast<int32_t>(_sort), _token));
+    }
+
+    ArticleCommentVotesPages::ArticleCommentVotesPages(const ApiSession& session, const std::string& token, const int32_t page, const CommentID comment_id, const Profile::VoteFilterBy filter_by) :
+        EmptyContentPaginator<Profile>(page),
+        _session(session),
+        _token(token),
+        _comment_id(comment_id),
+        _filter_by(filter_by)
+    {}
+
+    CachingJsonObject ArticleCommentVotesPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::article::comment::votes(static_cast<int64_t>(_comment_id), page, static_cast<int32_t>(_filter_by), _token));
+    }
+
+    ArticleSuggestionsPages::ArticleSuggestionsPages(const ApiSession& session, const std::string& token, const int32_t page, const requests::ArticleSuggestionsFilterRequest& request) :
+        EmptyContentPaginator<Article>(page),
+        _session(session),
+        _token(token),
+        _request(request)
+    {}
+
+    CachingJsonObject ArticleSuggestionsPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::article::suggestion::article_suggestions(page, _request, _token));
+    }
+
+    ChannelBlocksPages::ChannelBlocksPages(const ApiSession& session, const std::string& token, const int32_t page, const ChannelID channel_id) :
+        EmptyContentPaginator<ChannelProfile>(page),
+        _session(session),
+        _token(token),
+        _channel_id(channel_id)
+    {}
+
+    CachingJsonObject ChannelBlocksPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::channel::blocks(static_cast<int64_t>(_channel_id), page, _token));
+    }
+
+    ChannelsPages::ChannelsPages(const ApiSession& session, const std::string& token, const int32_t page, const requests::ChannelsFilterRequest& request) :
+        EmptyContentPaginator<Channel>(page),
+        _session(session),
+        _token(token),
+        _request(request)
+    {}
+
+    CachingJsonObject ChannelsPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::channel::channels(page, _request, _token));
+    }
+
+    ChannelPermissionsPages::ChannelPermissionsPages(const ApiSession& session, const std::string& token, const int32_t page, const ChannelID channel_id, const requests::ChannelPermissionsFilterRequest& request) :
+        EmptyContentPaginator<ChannelProfile>(page),
+        _session(session),
+        _token(token),
+        _channel_id(channel_id),
+        _request(request)
+    {}
+
+    CachingJsonObject ChannelPermissionsPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::channel::permissions(static_cast<int64_t>(_channel_id), page, _request, _token));
+    }
+
+    ChannelRecomendationsPages::ChannelRecomendationsPages(const ApiSession& session, const std::string& token, const int32_t page) :
+        EmptyContentPaginator<Channel>(page),
+        _session(session),
+        _token(token)
+    {}
+
+    CachingJsonObject ChannelRecomendationsPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::channel::recomendations(page, _token));
+    }
+
+    ChannelSubscribersPages::ChannelSubscribersPages(const ApiSession& session, const std::string& token, const int32_t page, const ChannelID channel_id) :
+        EmptyContentPaginator<ChannelProfile>(page),
+        _session(session),
+        _token(token),
+        _channel_id(channel_id)
+    {}
+
+    CachingJsonObject ChannelSubscribersPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::channel::subscribers(static_cast<int64_t>(_channel_id), page, _token));
+    }
+
+    SubscribtionsPages::SubscribtionsPages(const ApiSession& session, const std::string& token, const int32_t page) :
+        EmptyContentPaginator<Channel>(page),
+        _session(session),
+        _token(token)
+    {}
+
+    CachingJsonObject SubscribtionsPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::channel::subscriptions(page, _token));
+    }
+
+    MyProfileBadgesPages::MyProfileBadgesPages(const ApiSession& session, const std::string& token, const int32_t page) :
+        EmptyContentPaginator<Badge>(page),
+        _session(session),
+        _token(token)
+    {}
+
+    CachingJsonObject MyProfileBadgesPages::do_request(const int32_t page) const {
+        return _session.api_request(requests::profile::badge::all(page, _token));
+    }
+
+    ProfilesByRolePages::ProfilesByRolePages(const ApiSession& session, const std::string& token, const int32_t page, const RoleID role_id) :
+        EmptyContentPaginator<Profile>(page),
+        _session(session),
+        _token(token),
+        _role_id(role_id)
+    {}
+
+    CachingJsonObject ProfilesByRolePages::do_request(const int32_t page) const {
+        return _session.api_request(requests::profile::role_list::all(page, static_cast<int64_t>(_role_id), _token));
     }
 };

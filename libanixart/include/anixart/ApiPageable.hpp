@@ -16,6 +16,8 @@ namespace anixart {
 		using Ptr = std::shared_ptr<Pageable<T>>;
 		using UPtr = std::unique_ptr<Pageable<T>>;
 
+		virtual ~Pageable() = default;
+
 		virtual std::vector<ValueType> next() = 0;
 		virtual std::vector<ValueType> prev() = 0;
 		virtual std::vector<ValueType> go(const int32_t page) = 0;
@@ -34,11 +36,11 @@ namespace anixart {
 	public:
 		using typename Pageable<T>::ValueType;
 		/*
-			Lazy initializes. is_end() always returns true until get(), next(), prev() or go() called once, then is_end() returns truly ended state
+			Lazy initializes. is_end() always returns true until get(), next(), prev() or go(...) called once, then is_end() returns truly ended state
 			Should call get() after initialization
 		*/
 		Paginator(const int32_t page) :
-			_previous_page(page),
+			_previous_page(-1),
 			_current_page(page),
 			_total_page_count(-1),
 			_total_count(-1)
@@ -48,33 +50,31 @@ namespace anixart {
 			assert(_total_page_count >= 0);
 			_previous_page = _current_page;
 			if (_current_page >= _total_page_count) {
-				_current_page = 0;
+				return {};
 			}
-			else {
-				++_current_page;
-			}
+			++_current_page;
 			return parse_request();
 		}
+
 		std::vector<ValueType> prev() override {
 			assert(_total_page_count >= 0);
 			_previous_page = _current_page;
 			if (_current_page <= 0) {
-				_current_page = _total_page_count;
+				return {};
 			}
-			else {
-				--_current_page;
-			}
+			--_current_page;
 			return parse_request();
 		}
+
 		std::vector<ValueType> go(const int32_t page) override {
-			assert(_total_page_count >= 0);
-			if (page < 0 || page > _total_page_count) {
+			if (page < 0 || (_total_page_count != -1 && page >= _total_page_count)) {
 				return {};
 			}
 			_previous_page = _current_page;
 			_current_page = page;
 			return parse_request();
 		}
+
 		std::vector<ValueType> get() override {
 			return parse_request();
 		}
@@ -82,6 +82,7 @@ namespace anixart {
 		int32_t get_current_page() const override {
 			return _current_page;
 		}
+
 		bool is_end() const override {
 			return _current_page >= _total_page_count;
 		}
@@ -94,7 +95,7 @@ namespace anixart {
 		virtual json::CachingJsonObject do_request(const int32_t page) const = 0;
 
 		std::vector<ValueType> parse_request() override {
-			json::CachingJsonObject resp(this->do_request(_current_page));
+			json::CachingJsonObject resp(do_request(_current_page));
 			assert_status_code<PageableError>(resp);
 			_current_page = resp.get<int32_t>("current_page");
 			_total_page_count = resp.get<int32_t>("total_page_count");
@@ -125,23 +126,23 @@ namespace anixart {
 			assert(_previous_page >= 0);
 			_previous_page = _current_page;
 			if (_is_end) {
-				_current_page = 0;
+				return {};
 			}
-			else {
-				++_current_page;
-			}
+			++_current_page;
 			return parse_request();
 		}
+
 		std::vector<ValueType> prev() override {
 			assert(_previous_page >= 0);
 			_previous_page = _current_page;
-			if (_current_page > 0) {
-				--_current_page;
+			if (_current_page <= 0) {
+				return {};
 			}
+			--_current_page;
 			return parse_request();
 		}
+
 		std::vector<ValueType> go(const int32_t page) override {
-			assert(_previous_page >= 0);
 			if (page < 0) {
 				return {};
 			}
@@ -149,6 +150,7 @@ namespace anixart {
 			_current_page = page;
 			return parse_request();
 		}
+
 		std::vector<ValueType> get() override {
 			_previous_page = _current_page;
 			return parse_request();
@@ -183,6 +185,29 @@ namespace anixart {
 		int32_t _current_page;
 		int64_t _total_count;
 		bool _is_end;
+	};
+
+	template<typename T>
+	class OnePagePaginator : public EmptyContentPaginator<T> {
+	public:
+		using typename EmptyContentPaginator<T>::ValueType;
+
+		OnePagePaginator(const int32_t page) : EmptyContentPaginator<T>(page)
+		{
+		}
+
+		std::vector<ValueType> next() override {
+			return {};
+		}
+
+		std::vector<ValueType> prev() override {
+			return {};
+		}
+
+		bool is_end() const override {
+			return true;
+		}
+
 	};
 };
 

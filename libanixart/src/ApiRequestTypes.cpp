@@ -3,7 +3,7 @@
 
 namespace anixart::requests {
 	using network::json::InlineJson;
-	using aux::to_string;
+	using anixart::aux::to_string;
 
     std::string FilterRequest::serialize() const {
         std::string json;
@@ -40,6 +40,14 @@ namespace anixart::requests {
 		std::string json;
 		InlineJson::open_object(json);
 		InlineJson::append(json, "url", url);
+		InlineJson::close_object(json);
+		return json;
+	}
+	std::string DeprecatedReportRequest::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "message", message);
+		InlineJson::append(json, "reason", reason);
 		InlineJson::close_object(json);
 		return json;
 	}
@@ -121,14 +129,6 @@ namespace anixart::requests {
 		InlineJson::close_object(json);
 		return json;
 	}
-	std::string CommentReportRequest::serialize() const {
-		std::string json;
-		InlineJson::open_object(json);
-		InlineJson::append(json, "message", message);
-		InlineJson::append(json, "reason", reason);
-		InlineJson::close_object(json);
-		return json;
-	}
 	std::string ReleaseVideoAppealRequest::serialize() const {
 		std::string json;
 		InlineJson::open_object(json);
@@ -154,6 +154,85 @@ namespace anixart::requests {
 		InlineJson::append(json, "description", description);
 		InlineJson::append(json, "releases", release_ids);
 		InlineJson::append(json, "is_private", is_private);
+		InlineJson::close_object(json);
+		return json;
+	}
+	std::string ArticlesFilterRequest::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "channel_id", channel_id);
+		InlineJson::append(json, "date", date_filter);
+		InlineJson::close_object(json);
+		return json;
+	}
+	std::string ArticleCreateEditRequest::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "payload", payload, [](const std::string& val) {
+			return val;
+		});
+		InlineJson::append(json, "repost_article_id", repost_article_id);
+		InlineJson::close_object(json);
+		return json;
+	}
+	std::string ArticleSuggestionsFilterRequest::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "channel_id", channel_id);
+		InlineJson::close_object(json);
+		return json;
+	}
+	std::string ArticleSuggestionCreateEditRequest::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "payload", payload);
+		InlineJson::close_object(json);
+		return json;
+	}
+	std::string ChannelBlockManageRequest::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "expire_date", expire_date);
+		InlineJson::append(json, "reason", reason);
+		InlineJson::append(json, "target_profile_id", target_profile_id);
+		InlineJson::append(json, "is_blocked", is_blocked);
+		InlineJson::append(json, "is_perm_banned", is_perm_banned);
+		InlineJson::append(json, "is_reason_showing_enabled", is_reason_showing_enabled);
+		InlineJson::close_object(json);
+		return json;
+	}
+	std::string ChannelCreateEditRequest::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "title", title);
+		InlineJson::append(json, "description", description);
+		InlineJson::append(json, "is_article_suggestion_enabled", is_article_suggestion_enabled);
+		InlineJson::append(json, "is_commenting_enabled", is_commenting_enabled);
+		InlineJson::close_object(json);
+		return json;
+	}
+	std::string ChannelPermissionManageRequest::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "permission", permission);
+		InlineJson::append(json, "target_profile_id", target_profile_id);
+		InlineJson::close_object(json);
+		return json;
+	}
+	std::string ChannelsFilterRequest::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "is_blog", is_blog);
+		InlineJson::append(json, "is_subscribed", is_subscribed);
+		InlineJson::append(json, "sort", sort);
+		InlineJson::append(json, "permission", permission);
+		InlineJson::close_object(json);
+		return json;
+	}
+	std::string ChannelPermissionsFilterRequest::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "permission", permission);
 		InlineJson::close_object(json);
 		return json;
 	}

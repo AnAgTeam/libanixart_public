@@ -1,17 +1,50 @@
 #include <anixart/ApiTypes.hpp>
 #include <anixart/CachingJson.hpp>
+#include <anixart/Random.hpp>
 #include <netsess/JsonTools.hpp>
+#include <netsess/StringTools.hpp>
 
 namespace anixart {
 	using namespace json;
-	using ParseJson = network::json::ParseJson;
+	using network::json::ParseJson;
+	using network::json::InlineJson;
+	using network::StringTools;
+	using random::gen_random_string;
 
-	static int32_t parse_friend_status(CachingJsonValue friend_status_value) {
-		if (friend_status_value.is_null()) {
-			return -1;
-		}
-		return friend_status_value.as_int64();
+	static std::string to_string(const MediaFile::Ptr media_file) {
+		return media_file->serialize();
 	}
+
+	struct ArticleBlockVisitor : boost::static_visitor<std::string> {
+		template<typename T>
+		std::string operator()(T&& val) const {
+			return val->serialize();
+		}
+	};
+
+	static std::string to_string(const ArticlePayload::BlockVariant& block_variant) {
+		return boost::apply_visitor(ArticleBlockVisitor(), block_variant);
+	}
+
+	Badge::Badge(CachingJsonObject& object) :
+		id(object.get<int64_t>("id")),
+		name(object.get<std::string>("name")),
+		type(object.get<Type>("type")),
+		date(object.get<TimestampPoint>("date")),
+		badge_url(object.get<std::string>("badge_url"))
+	{}
+
+	Badge Badge::from_inner(json::CachingJsonObject & object) {
+		return Badge(object, ctx_from_inner);
+	}
+
+	Badge::Badge(CachingJsonObject& object, ctx_from_inner_type) :
+		id(object.get<int64_t>("badge_id")),
+		name(object.get<std::string>("badge_name")),
+		type(object.get<Type>("badge_type")),
+		date(),
+		badge_url(object.get<std::string>("badge_url"))
+	{}
 
 	ProfileToken::ProfileToken(const int64_t id, const std::string& token) :
 		id(id),
@@ -49,6 +82,8 @@ namespace anixart {
 		last_activity_time(object.get<TimestampPoint>("last_activity_time")),
 		register_date(object.get<TimestampPoint>("register_date")),
 
+		badge(Badge::from_inner(object)),
+
 		is_banned(object.get<bool>("is_banned")),
 		is_perm_banned(object.get<bool>("is_perm_banned")),
 		ban_expires(object.get<TimestampPoint>("ban_expires")),
@@ -67,12 +102,16 @@ namespace anixart {
 		comment_count(object.get<int32_t>("comment_count")),
 		collection_count(object.get<int32_t>("collection_count")),
 		rating_score(object.get<int32_t>("rating_score")),
-		friend_status(parse_friend_status(object.get<CachingJsonValue>("friend_status"))),
+		friend_status(parse_friend_status(object)),
 		friend_count(object.get<int32_t>("friend_count")),
 		votes(object.get<CachingJsonArray>("votes").to_vector<Release::Ptr>()),
 		history(object.get<CachingJsonArray>("history").to_vector<Release::Ptr>()),
 		watch_dynamics(object.get<CachingJsonArray>("watch_dynamics").to_vector<ProfileWatchDynamic::Ptr>()),
 		roles(object.get<CachingJsonArray>("roles").to_vector<Role::Ptr>()),
+		collections_preview(object.get<CachingJsonArray>("collections_preview").to_vector<Collection::Ptr>()),
+		comments_preview(object.get<CachingJsonArray>("comments_preview").to_vector<Comment::Ptr>()),
+		release_comments_preview(object.get<CachingJsonArray>("release_comments_preview").to_vector<Comment::Ptr>()),
+		release_videos_preview(object.get<CachingJsonArray>("release_videos_preview").to_vector<ReleaseVideo::Ptr>()),
 
 		is_blocked(object.get<bool>("is_blocked")),
 		is_me_blocked(object.get<bool>("is_me_blocked")),
@@ -100,6 +139,14 @@ namespace anixart {
 		is_vk_bound(object.get<bool>("is_vk_bound")),
 		is_google_bound(object.get<bool>("is_vk_bound"))
 	{}
+
+	int32_t Profile::parse_friend_status(CachingJsonObject& object) {
+		auto friend_status_value = object.get<CachingJsonValue>("friend_status");
+		if (friend_status_value.is_null()) {
+			return -1;
+		}
+		return static_cast<int32_t>(friend_status_value.as_int64());
+	}
 
 	Profile::FriendStatus Profile::get_friend_status_to(ProfileID other_id) const {
 		if (friend_status == -1) {
@@ -389,10 +436,493 @@ namespace anixart {
 
 	CollectionGetInfo::CollectionGetInfo(CachingJsonObject& object) :
 		collection(object.get<Collection::Ptr>("collection")),
-		watched_count(object.get<int32_t>("completedCount")),
-		dropped_count(object.get<int32_t>("droppedCount")),
-		hold_on_count(object.get<int32_t>("holdOnCount")),
-		plan_count(object.get<int32_t>("planCount")),
-		watching_count(object.get<int32_t>("watchingCount"))
+		watched_count(object.get<int32_t>("watched_count")),
+		dropped_count(object.get<int32_t>("dropped_count")),
+		hold_on_count(object.get<int32_t>("hold_on_count")),
+		plan_count(object.get<int32_t>("plan_count")),
+		watching_count(object.get<int32_t>("watching_count"))
+	{}
+
+	ArticleBlock::ArticleBlock(std::string_view id, std::string_view name) :
+		id(id),
+		name(name)
+	{}
+
+	ArticleBlock::ArticleBlock(CachingJsonObject& object) :
+		id(object.get<std::string>("id")),
+		name(object.get<std::string>("name"))
+	{}
+
+	std::string ArticleBlock::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "id", id);
+		InlineJson::append(json, "name", name);
+		InlineJson::append(json, "type", name);
+		//InlineJson::append(json, "data", std::nullopt);
+		InlineJson::append(json, "data", *this, [](const ArticleBlock& block) {
+			return "{}";
+		});
+		InlineJson::close_object(json);
+		return json;
+	}
+
+	std::string ArticleBlock::get_random_uuid() {
+		return gen_random_string(11, random::ascii);
+	}
+
+	ArticleDelimiterBlock::ArticleDelimiterBlock(std::string_view id) :
+		ArticleBlock(id, name)
+	{}
+
+	ArticleDelimiterBlock::ArticleDelimiterBlock(CachingJsonObject& object) :
+		ArticleBlock(object)
+	{}
+
+	std::string ArticleDelimiterBlock::serialize() const {
+		return ArticleBlock::serialize();
+	}
+
+	ArticleEmbedBlock::ArticleEmbedBlock(std::string_view id) :
+		ArticleBlock(id, name)
+	{}
+
+	ArticleEmbedBlock::ArticleEmbedBlock(CachingJsonObject& object) :
+		ArticleEmbedBlock(object.get<std::string>("id"), object.get<CachingJsonObject>("data"))
+	{}
+
+	ArticleEmbedBlock::ArticleEmbedBlock(std::string_view id, json::CachingJsonObject data_object) :
+		ArticleBlock(id, name),
+		title(data_object.get<std::string>("title")),
+		description(data_object.get<std::string>("description")),
+		embed_url(data_object.get<std::string>("embed")),
+		hash(data_object.get<std::string>("hash")),
+		image_url(data_object.get<std::string>("image")),
+		service(data_object.get<std::string>("service")),
+		site_name(data_object.get<std::string>("site_name")),
+		url(data_object.get<std::string>("url")),
+
+		height(data_object.get<int32_t>("height")),
+		width(data_object.get<int32_t>("width"))
+	{}
+
+	std::string ArticleEmbedBlock::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "id", id);
+		InlineJson::append(json, "name", name);
+		InlineJson::append(json, "type", name);
+		InlineJson::append(json, "data", *this, [](const ArticleEmbedBlock& block) {
+			std::string json;
+			InlineJson::open_object(json);
+			InlineJson::append(json, "title", block.title);
+			InlineJson::append(json, "description", block.description);
+			InlineJson::append(json, "embed", block.embed_url);
+			InlineJson::append(json, "hash", block.hash);
+			InlineJson::append(json, "image", block.image_url);
+			InlineJson::append(json, "service", block.service);
+			InlineJson::append(json, "site_name", block.site_name);
+			InlineJson::append(json, "url", block.url);
+			InlineJson::append(json, "height", block.height);
+			InlineJson::append(json, "width", block.width);
+			InlineJson::close_object(json);
+			return json;
+		});
+		InlineJson::close_object(json);
+		return json;
+	}
+
+	ArticleHeaderBlock::ArticleHeaderBlock(std::string_view id) :
+		ArticleBlock(id, name)
+	{}
+
+	ArticleHeaderBlock::ArticleHeaderBlock(CachingJsonObject& object) :
+		ArticleHeaderBlock(object, object.get<CachingJsonObject>("data"))
+	{}
+
+	std::string ArticleHeaderBlock::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "id", id);
+		InlineJson::append(json, "name", name);
+		InlineJson::append(json, "type", name);
+		InlineJson::append(json, "data", *this, [](const ArticleHeaderBlock& block) {
+			std::string json;
+			InlineJson::open_object(json);
+			InlineJson::append(json, "text", block.text);
+			InlineJson::append(json, "text_length", block.text.length());
+			InlineJson::append(json, "level", block.level);
+			InlineJson::close_object(json);
+			return json;
+		});
+		InlineJson::close_object(json);
+		return json;
+	}
+
+	ArticleHeaderBlock::ArticleHeaderBlock(CachingJsonObject& object, CachingJsonObject data_object) :
+		ArticleBlock(object),
+		text(data_object.get<std::string>("text")),
+		text_length(data_object.get<int32_t>("text_length")),
+		is_expand_available(data_object.get<bool>("is_expand_available")),
+		level(data_object.get<int32_t>("level"))
+	{}
+
+	ArticleListBlock::ArticleListBlock(std::string_view id) :
+		ArticleBlock(id, name)
+	{}
+
+	ArticleListBlock::ArticleListBlock(CachingJsonObject& object) :
+		ArticleListBlock(object, object.get<CachingJsonObject>("data"))
+	{}
+
+	std::string ArticleListBlock::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "id", id);
+		InlineJson::append(json, "name", name);
+		InlineJson::append(json, "type", name);
+		InlineJson::append(json, "data", *this, [](const ArticleListBlock& block) {
+			std::string json;
+			InlineJson::open_object(json);
+			InlineJson::append(json, "items", block.items);
+			InlineJson::append(json, "item_count", block.items.size());
+			InlineJson::append(json, "style", block.serialize_style());
+			InlineJson::close_object(json);
+			return json;
+		});
+		InlineJson::close_object(json);
+		return json;
+	}
+
+	ArticleListBlock::ArticleListBlock(CachingJsonObject& object, CachingJsonObject data_object) :
+		ArticleBlock(object),
+		items(data_object.get<CachingJsonArray>("items").to_vector<std::string>()),
+		item_count(data_object.get<int32_t>("item_count")),
+		style(parse_style(data_object.get<std::string>("style"))),
+		is_expand_available(data_object.get<bool>("is_expand_available"))
+	{}
+
+	ArticleListBlock::Style ArticleListBlock::parse_style(const std::string& str) {
+		if (str == style_unordered) {
+			return Style::Unordered;
+		}
+		else if (str == style_ordered) {
+			return Style::Ordered;
+		}
+		return Style::None;
+	}
+
+	std::string_view ArticleListBlock::serialize_style() const {
+		switch(style) {
+		case Style::Unordered:
+			return style_unordered;
+		case Style::Ordered:
+			return style_ordered;
+		default:
+			return "none";
+		}
+	}
+
+	MediaFile::MediaFile() :
+		width(0),
+		height(0)
+	{}
+
+	MediaFile::MediaFile(CachingJsonObject& object) :
+		uuid(object.get<std::string>("id")),
+		hash(object.get<std::string>("hash")),
+		url(object.get<std::string>("url")),
+
+		height(object.get<int32_t>("height")),
+		width(object.get<int32_t>("width"))
+	{}
+
+	std::string MediaFile::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "id", uuid);
+		InlineJson::append(json, "hash", hash);
+		InlineJson::append(json, "url", url);
+		InlineJson::append(json, "height", height);
+		InlineJson::append(json, "width", width);
+		InlineJson::close_object(json);
+		return json;
+	}
+
+	ArticleMediaBlock::ArticleMediaBlock(std::string_view id) :
+		ArticleBlock(id, name)
+	{}
+
+	ArticleMediaBlock::ArticleMediaBlock(CachingJsonObject& object) :
+		ArticleMediaBlock(object, object.get<CachingJsonObject>("data"))
+	{}
+
+	std::string ArticleMediaBlock::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "id", id);
+		InlineJson::append(json, "name", name);
+		InlineJson::append(json, "type", name);
+		InlineJson::append(json, "data", *this, [](const ArticleMediaBlock& block) {
+			std::string json;
+			InlineJson::open_object(json);
+			InlineJson::append(json, "items", block.items);
+			InlineJson::append(json, "item_count", block.items.size());
+			InlineJson::close_object(json);
+			return json;
+		});
+		InlineJson::close_object(json);
+		return json;
+	}
+
+	ArticleMediaBlock::ArticleMediaBlock(CachingJsonObject& object, CachingJsonObject data_object) :
+		ArticleBlock(object),
+		items(data_object.get<CachingJsonArray>("items").to_vector<MediaFile::Ptr>()),
+		item_count(data_object.get<int32_t>("item_count"))
+	{}
+
+	ArticleParagraphBlock::ArticleParagraphBlock(std::string_view id) :
+		ArticleBlock(id, name)
+	{}
+
+	ArticleParagraphBlock::ArticleParagraphBlock(CachingJsonObject& object) :
+		ArticleParagraphBlock(object, object.get<CachingJsonObject>("data"))
+	{}
+
+	std::string ArticleParagraphBlock::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "id", id);
+		InlineJson::append(json, "name", name);
+		InlineJson::append(json, "type", name);
+		InlineJson::append(json, "data", *this, [](const ArticleParagraphBlock& block) {
+			std::string json;
+			InlineJson::open_object(json);
+			InlineJson::append(json, "text", block.text);
+			InlineJson::append(json, "text_length", block.text.length());
+			InlineJson::close_object(json);
+			return json;
+		});
+		InlineJson::close_object(json);
+		return json;
+	}
+
+	ArticleParagraphBlock::ArticleParagraphBlock(CachingJsonObject& object, CachingJsonObject data_object) :
+		ArticleBlock(object),
+		text(data_object.get<std::string>("text")),
+		text_length(data_object.get<int32_t>("text_length")),
+		is_expand_available(data_object.get<int32_t>("is_expand_available"))
+	{}
+
+	ArticleQuoteBlock::ArticleQuoteBlock(std::string_view id) :
+		ArticleBlock(id, name)
+	{}
+
+	ArticleQuoteBlock::ArticleQuoteBlock(CachingJsonObject& object) :
+		ArticleQuoteBlock(object, object.get<CachingJsonObject>("data"))
+	{}
+
+	std::string ArticleQuoteBlock::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "id", id);
+		InlineJson::append(json, "name", name);
+		InlineJson::append(json, "type", name);
+		InlineJson::append(json, "data", *this, [](const ArticleQuoteBlock& block) {
+			std::string json;
+			InlineJson::open_object(json);
+			InlineJson::append(json, "alignment", block.serialize_alignment());
+			InlineJson::append(json, "caption", block.caption);
+			InlineJson::append(json, "text", block.text);
+			InlineJson::append(json, "caption_length", block.caption.length());
+			InlineJson::append(json, "text_length", block.text.length());
+			InlineJson::close_object(json);
+			return json;
+		});
+		InlineJson::close_object(json);
+		return json;
+	}
+
+	ArticleQuoteBlock::ArticleQuoteBlock(CachingJsonObject& object, CachingJsonObject data_object) :
+		ArticleBlock(object),
+		alignment(parse_alignment(data_object.get<std::string>("alignment"))),
+		caption(data_object.get<std::string>("caption")),
+		text(data_object.get<std::string>("text")),
+		caption_length(data_object.get<int32_t>("caption_length")),
+		text_length(data_object.get<int32_t>("text_length"))
+	{}
+
+	ArticleQuoteBlock::Alignment ArticleQuoteBlock::parse_alignment(const std::string& str) {
+		if (str == alignment_left) {
+			return Alignment::Left;
+		}
+		else if (str == alignment_center) {
+			return Alignment::Center;
+		}
+		return Alignment::None;
+	}
+
+	std::string_view ArticleQuoteBlock::serialize_alignment() const {
+		switch(alignment) {
+		case Alignment::Left:
+			return alignment_left;
+		case Alignment::Center:
+			return alignment_center;
+		default:
+			return "none";
+		}
+	}
+
+	ArticleUnsupportedBlock::ArticleUnsupportedBlock(std::string_view id) :
+		ArticleBlock(id, name)
+	{}
+
+	ArticleUnsupportedBlock::ArticleUnsupportedBlock(json::CachingJsonObject& object) :
+		ArticleBlock(object)
+	{}
+
+	std::string ArticleUnsupportedBlock::serialize() const {
+		return ArticleBlock::serialize();
+	}
+
+	ArticlePayload::ArticlePayload() :
+		version(last_version)
+	{}
+
+	ArticlePayload::ArticlePayload(json::CachingJsonObject& object) :
+		blocks(parse_blocks(object.get<CachingJsonArray>("blocks"))),
+		block_count(object.get<int32_t>("block_count")),
+
+		date(object.get<TimestampPoint>("time")),
+		version(object.get<std::string>("version")),
+
+		is_collapse_available(object.get<bool>("is_collapse_available")),
+		is_expand_available(object.get<bool>("is_expand_available"))
+	{}
+
+	std::string ArticlePayload::serialize() const {
+		std::string json;
+		InlineJson::open_object(json);
+		InlineJson::append(json, "blocks", blocks);
+		InlineJson::append(json, "block_count", blocks.size());
+		InlineJson::append(json, "time", date);
+		InlineJson::append(json, "version", version);
+		InlineJson::close_object(json);
+		return json;
+	}
+
+	std::vector<ArticlePayload::BlockVariant> ArticlePayload::parse_blocks(CachingJsonArray array) {
+		std::vector<BlockVariant> blocks;
+		for (size_t i = 0; i < array.size(); ++i) {
+			blocks.emplace_back(parse_block(array[i].as_object()));
+		}
+		return blocks;
+	}
+
+	ArticlePayload::BlockVariant ArticlePayload::parse_block(CachingJsonObject object) {
+		std::string name = object.get<std::string>("name");
+		if (name == ArticleDelimiterBlock::name) {
+			return std::make_shared<ArticleDelimiterBlock>(object);
+		}
+		if (name == ArticleEmbedBlock::name) {
+			return std::make_shared<ArticleEmbedBlock>(object);
+		}
+		if (name == ArticleHeaderBlock::name) {
+			return std::make_shared<ArticleHeaderBlock>(object);
+		}
+		if (name == ArticleListBlock::name) {
+			return std::make_shared<ArticleListBlock>(object);
+		}
+		if (name == ArticleMediaBlock::name) {
+			return std::make_shared<ArticleMediaBlock>(object);
+		}
+		if (name == ArticleParagraphBlock::name) {
+			return std::make_shared<ArticleParagraphBlock>(object);
+		}
+		if (name == ArticleQuoteBlock::name) {
+			return std::make_shared<ArticleQuoteBlock>(object);
+		}
+		return std::make_shared<ArticleUnsupportedBlock>(object);
+	}
+
+	Channel::Channel(CachingJsonObject& object) :
+		id(object.get<int64_t>("id")),
+		title(object.get<std::string>("title")),
+		description(object.get<std::string>("description")),
+		avatar_url(object.get<std::string>("avatar_url")),
+		cover_url(object.get<std::string>("cover_url")),
+		blog_profile_id(object.get<int64_t>("blog_profile_id")),
+
+		permission(object.get<Permission>("permission")),
+
+		article_count(object.get<int32_t>("article_count")),
+		creation_date(object.get<TimestampPoint>("creation_date")),
+		last_update_date(object.get<TimestampPoint>("last_update_date")),
+		subscriber_count(object.get<int32_t>("subscriber_count")),
+
+		badge_id(object.get<int64_t>("badge_id")),
+		badge_name(object.get<std::string>("badge_name")),
+		badge_type(object.get<std::string>("badge_type")),
+		badge_url(object.get<std::string>("badge_url")),
+
+		block_expire_date(object.get<TimestampPoint>("block_expire_date")),
+		block_reason(object.get<std::string>("block_reason")),
+
+		is_deleted(object.get<bool>("is_deleted")),
+		is_blocked(object.get<bool>("is_blocked")),
+		is_perm_banned(object.get<bool>("is_perm_banned")),
+		is_article_suggestion_enabled(object.get<bool>("is_article_suggestion_enabled")),
+		is_verified(object.get<bool>("is_verified")),
+		is_subscribed(object.get<bool>("is_subscribed")),
+		is_commenting_enabled(object.get<bool>("is_commenting_enabled")),
+		is_blog(object.get<bool>("isBlog")),
+
+		is_administrator_or_higher(object.get<bool>("is_administrator_or_higher")),
+		is_creator(object.get<bool>("is_creator"))
+	{}
+
+	Article::Article(json::CachingJsonObject& object) :
+		id(object.get<int64_t>("id")),
+		creation_date(object.get<TimestampPoint>("creation_date")),
+		last_update_date(object.get<TimestampPoint>("last_update_date")),
+		payload(object.get<ArticlePayload::Ptr>("payload")),
+
+		author(object.get<Profile::Ptr>("author")),
+		channel(object.get<Channel::Ptr>("channel")),
+
+		vote_count(object.get<int32_t>("vote_count")),
+		vote(object.get<int32_t>("vote")),
+
+		contains_repost_article(object.get<bool>("contains_repost_article")),
+		repost_count(object.get<int64_t>("repost_count")),
+		repost_article(object.get<Article::Ptr>("repost_article")),
+
+		is_deleted(object.get<bool>("is_deleted"))
+	{}
+
+	ChannelProfile::ChannelProfile(CachingJsonObject& object) :
+		profile_id(object.get<int64_t>("id")),
+		username(object.get<std::string>("login")),
+		avatar_url(object.get<std::string>("avatar")),
+		privilege_level(object.get<Profile::PrivilegeLevel>("privilege_level")),
+
+		badge(Badge::from_inner(object)),
+
+		ban_reason(object.get<std::string>("ban_reason")),
+		ban_expires_date(object.get<TimestampPoint>("ban_expires_date")),
+
+		is_banned(object.get<bool>("is_banned")),
+		is_sponsor(object.get<bool>("is_sponsor")),
+		is_verified(object.get<bool>("is_verified")),
+
+		channel_id(object.get<int64_t>("channel_id")),
+		permission(object.get<Channel::Permission>("permission")),
+		permission_creation_date(object.get<TimestampPoint>("permission_creation_date")),
+
+		block_reason(object.get<std::string>("block_reason")),
+		block_expire_date(object.get<TimestampPoint>("block_expire_date")),
+
+		is_blocked(object.get<bool>("is_blocked")),
+		is_perm_blocked(object.get<bool>("is_perm_blocked"))
 	{}
 };

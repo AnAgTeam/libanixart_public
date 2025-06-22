@@ -52,37 +52,54 @@ void* operator new(size_t size) {
 }
 #endif
 
-class FooBase {
-public:
-    FooBase(int64_t a) : a(a) {}
-    virtual ~FooBase() {}
-    int64_t a;
-};
-class Foo : public FooBase {
-public:
-    Foo(int64_t a, int64_t b) : FooBase(a), b(b) {}
-    int64_t b;
-};
-
-template<typename TCast, typename TArg>
-static std::vector<std::shared_ptr<TCast>> vector_dynamic_pointer_cast(const std::vector<std::shared_ptr<TArg>>& vec) {
-    std::vector<std::shared_ptr<TCast>> out_vec;
-    out_vec.reserve(vec.size());
-    for (auto& item : vec) {
-        out_vec.push_back(std::dynamic_pointer_cast<TCast>(item));
+void print_article_block_info(ArticleParagraphBlock::Ptr paragraph_block) {
+    std::cout << "(ParagraphBlock): id=" << paragraph_block->id << ", Text=" << paragraph_block->text << std::endl;
+}
+void print_article_block_info(ArticleMediaBlock::Ptr media_block) {
+    std::cout << "(MediaBlock) id=" << media_block->id << std::endl;
+    for (auto& media_file : media_block->items) {
+        std::cout << "* (MediaFile): uuid=" << media_file->uuid << ", url=" << media_file->url << std::endl;
     }
-    return out_vec;
+}
+void print_article_block_info(ArticleHeaderBlock::Ptr header_block) {
+    std::cout << "(HeaderBlock): id=" << header_block->id << ", Text=" << header_block->text << ", level=" << header_block->level << std::endl;
+}
+
+void print_article_info(Article::Ptr article) {
+    std::cout << "Article: author=" << article->author->username << std::endl;
+    for (size_t i = 0; i < article->payload->blocks.size(); ++i) {
+        auto& block_variant = article->payload->blocks[i];
+
+        std::cout << "[" << i << "] ";
+        switch (block_variant.which()) {
+        case ArticlePayload::block_magic<ArticleParagraphBlock>():
+            print_article_block_info(variant_get<ArticleParagraphBlock::Ptr>(block_variant));
+            break;
+        case ArticlePayload::block_magic<ArticleMediaBlock>():
+            print_article_block_info(variant_get<ArticleMediaBlock::Ptr>(block_variant));
+            break;
+        case ArticlePayload::block_magic<ArticleHeaderBlock>():
+            print_article_block_info(variant_get<ArticleHeaderBlock::Ptr>(block_variant));
+            break;
+        }
+    }
+}
+
+void test_articles(Api& api) {
+    ArticlesFilterRequest article_request;
+    article_request.channel_id = ChannelID(662);
+    article_request.date_filter = ArticlesFilterRequest::DateFilter::AllTime;
+
+    std::vector<Article::Ptr> articles = api.articles().articles(article_request, 0)->get();
+
+    print_article_info(articles[0]);
 }
 
 int main() {
     (void)_setmode(_fileno(stdin), _O_WTEXT);
     SetConsoleOutputCP(CP_UTF8);
 
-    //volatile std::string object = InlineJsonExperimental::create_object("key", 1, "value", true);
-
     network::UrlSession::init();
-
-    //return release_info_tool_main();
 
     try {
         using namespace std::chrono_literals;
@@ -97,48 +114,70 @@ int main() {
         api.set_token(token);
         ApiSession& sess = api.get_session();
         sess.set_verbose(true, false);
-        sess.switch_base_url(false);
 
         Parsers parsers;
-        ReleaseID rel_id = static_cast<ReleaseID>(16649);
+        ReleaseID rel_id = static_cast<ReleaseID>(18442);
 
-        //for (int i = 0; i < 100; ++i) {
-        //    auto ach_resp = sess.api_request(requests::beta::achievements::get_achievement(i, token));
-        //    std::cout << "Code: " << ach_resp["code"] << " (" << i << ")\n";
-        //    std::this_thread::sleep_for(2s);
+        //Article::Ptr article = api.articles().get_article(ArticleID(96713));
+
+        //std::vector<Profile::Ptr> my_friends = api.profiles().get_friends(my_profile_id, 0)->get();
+        //Channel::Ptr friend_blog = api.articles().get_blog_channel(my_friends[10]->id);
+
+        ChannelID friend_blog_id(4813);
+
+        //ArticlesFilterRequest articles_request;
+        //articles_request.channel_id = friend_blog_id;
+
+        //for (auto article : api.articles().articles(articles_request, 0)->get()) {
+        //    static int i = 0;
+        //    std::cout << "Article (" << i++ << ") id=" << static_cast<int64_t>(article->id) << std::endl;
+        //    print_article_info(article);
         //}
 
-        //auto test_resp = sess.api_request(requests::beta::profile::badge::edit(6, token));
+        //ArticlesFilterRequest articles_request;
+        //articles_request.channel_id = friend_blog->id;
 
-        //auto [my_profile, _] = api.profiles().get_profile(my_profile_id);
+        //std::vector<Article::Ptr> blog_articles = api.articles().articles(articles_request, 0)->get();
 
-        //std::vector<std::shared_ptr<FooBase>> bases = {
-        //    std::dynamic_pointer_cast<FooBase>(std::make_shared<Foo>(2, 4))
-        //};
-        //std::vector<std::shared_ptr<Foo>> foos = vector_dynamic_pointer_cast<Foo>(bases);
+        //Article::Ptr article = api.articles().get_article(ArticleID(97400));
 
-        //std::vector<Comment::Ptr> release_comments = api.releases().release_comments(rel_id, 0, Comment::FilterBy::All)->get();
+        //Channel::Ptr my_channel = api.articles().get_blog_channel(my_profile_id);
 
-        //std::vector<Comment::Ptr> replies = api.releases().replies_to_comment(CommentID(5893767), 0, Comment::Sort::Oldest)->get();
-        //for (Comment::Ptr& comment : replies) {
-        //    std::cout << "[" << comment->author->username << "] " << comment->message << std::endl;
-        //}
+        ChannelID my_channel_id(4714);
 
-        //Comment::Ptr comment = api.releases().release_comment(CommentID(5893767));
+        std::string media_upload_token = api.articles().get_channel_media_token(my_channel_id, false, true);
 
-        //std::vector<Collection::Ptr> collections = api.collections().all_collections(Collection::Sort::WeekPopular, 1, 0)->get();
+        //auto header_block = std::make_shared<ArticleHeaderBlock>(ArticleBlock::get_random_uuid());
+        //header_block->text = "Жиза";
+        //header_block->level = 3;
 
-        //requests::FilterRequest filter_request;
-        //filter_request.genres = { "" };
-        //filter_request.sort = requests::FilterRequest::Sort::Grade;
-        //std::vector<Release::Ptr> releases = api.search().filter_search(filter_request, false, 0)->get();
+        //MediaFile::Ptr media_file = api.articles().upload_media_file(R"(E:\misc\screenshort_i_1.jpg)", media_upload_token);
 
-        //requests::CommentAddRequest request;
-        //request.message = "Lolpojoholou, эщкере тебе";
-        //request.parent_comment_id = CommentID(5893767);
-        //request.reply_to_profile_id = ProfileID(21948);
-        //request.is_spoiler = false;
-        //api.releases().add_release_comment(ReleaseID(17632), request);
+        //auto media_block = std::make_shared<ArticleMediaBlock>(ArticleBlock::get_random_uuid());
+        //media_block->items.push_back(media_file);
+
+        ////auto unsupp_block = std::make_shared<ArticleUnsupportedBlock>(ArticleBlock::get_random_uuid());
+        
+        //ArticlePayload payload;
+        //payload.date = std::chrono::time_point_cast<TimestampDuration>(std::chrono::system_clock::now());
+        //payload.blocks.push_back(header_block);
+        //payload.blocks.push_back(media_block);
+
+        ArticleCreateEditRequest create_request;
+        //create_request.payload = payload.serialize();
+        //create_request.repost_article_id = ArticleID(99995);
+        //create_request.payload = R"({"blocks":[{"id":"0b68fcc4-4df","name":"embed","type":"embed","data":{"title":"СМЕШАРИКИ - ОГУРЕЦ PHONK (ПРЕМЬЕРА КЛИПА 2024) [ля]","description":"Слушать альбом \"ля\": https://band.link/lyaaТы чувствуешь вкус настоящей жизни, потому что у тебя есть он… новый фонк-альбом от Смешариков. В нём есть всё: ле...","embed":"https://www.youtube.com/embed/nETEGKpqs9M","hash":"5131e0f5c37751ae8b3be58d34bdc04fde1d421f","image":"https://i.ytimg.com/vi/nETEGKpqs9M/maxresdefault.jpg","service":"youtube","site_name":"YouTube","url":"https://www.youtube.com/watch?v=nETEGKpqs9M&list=RDnETEGKpqs9M&start_radio=1","height":720,"width":1280}}],"block_count":1,"time":1750356436,"version":"2.26.5"})";
+        //create_request.payload = R"({"blocks":[{"id":"0b68fcb4-4df","name":"embed","type":"embed","data":{"title":"СМЕШАРИКИ - ОГУРЕЦ PHONK (ПРЕМЬЕРА КЛИПА 2024) [ля]","description":"Слушать альбом \"ля\": https://band.link/lyaaТы чувствуешь вкус настоящей жизни, потому что у тебя есть он… новый фонк-альбом от Смешариков. В нём есть всё: ле...","embed":"https://www.youtube.com/embed/nETEGKpqs9M","hash":"5131e0f5c37751ae8b3be58d34bdc04fde1d421f","image":"https://i.ytimg.com/vi/nETEGKpqs9M/maxresdefault.jpg","service":"youtube","site_name":"YouTube","url":"https://www.youtube.com/watch?v=nETEGKpqs9M&list=RDnETEGKpqs9M&start_radio=1","height":720,"width":1280}},{"id":"0b68fcb4-4da","name":"media","type":"media","data":{"items":[{"id":"a98c9726-08c8-483e-b741-9fc537f7b80e","hash":"29077b25d8f0f2b832a354425a3604c7e0913ceb","url":"https://s3.anixstatic.com/images/a98c9726-08c8-483e-b741-9fc537f7b80e_N1BXH.jpg","height":512,"width":512}],"item_count":1}},{"id":"0b68fcb4-6df","name":"paragraph","type":"paragraph","data":{"text":"Вот она - истина","text_length":28}}],"block_count":3,"time":1750348705000,"version":"2.26.5"})";
+        //create_request.payload = R"({"blocks":[{"id":"0b68fcb4-4da","name":"media","type":"media","data":{"items":[{"id":"a98c9726-08c8-483e-b741-9fc537f7b80e","hash":"29077b25d8f0f2b832a354425a3604c7e0913ceb","url":"https://s3.anixstatic.com/images/a98c9726-08c8-483e-b741-9fc537f7b80e_N1BXH.jpg","height":512,"width":512}],"item_count":1}},{"id":"0b68fcb4-6df","name":"paragraph","type":"paragraph","data":{"text":"Вот она - истина","text_length":28}}],"block_count":2,"time":1750348705000,"version":"2.26.5"})";
+        //create_request.payload = R"({"blocks":[{"id":"a0971e2e-fa6","name":"paragraph","type":"paragraph","data":{"text":"123","text_length":3}}],"block_count":1,"time":1750347291000,"version":"2.26.5"})";
+        //create_request.payload = R"(ArticlePayload(time=1750345705, version="2.26.5", blocks=[ArticleParagraphData(text="123", textLength=28)], blockCount=1))";
+        //create_request.payload = R"(ArticlePayload(time=1750345705,version=2.26.5,blocks=[ArticleEmbedData(hash=5131e0f5c37751ae8b3be58d34bdc04fde1d421f,url=https://www.youtube.com/watch?v=nETEGKpqs9M&list=RDnETEGKpqs9M&start_radio=1,service=youtube,siteName=YouTube,title=СМЕШАРИКИ - ОГУРЕЦ PHONK (ПРЕМЬЕРА КЛИПА 2024) [ля],description=Слушать альбом "ля": https://band.link/lyaaТы чувствуешь вкус настоящей жизни, потому что у тебя есть он… новый фонк-альбом от Смешариков. В нём есть всё: ле...,width=1280,height=720,image=https://i.ytimg.com/vi/nETEGKpqs9M/maxresdefault.jpg,embed=https://www.youtube.com/embed/nETEGKpqs9M),ArticleMediaData(items=[MediaFile(id=c7a063cb-7d49-4a5a-a5c2-4bf03a4ad37a,hash=65bdf104a8abd4c6c89c6226f7fa907531d7ea3e,url=https://s3.anixstatic.com/images/c7a063cb-7d49-4a5a-a5c2-4bf03a4ad37a_MvFeV.jpg,width=512,height=512)],itemCount=1),ArticleParagraphData(text=Вот она - истина,textLength=28)],blockCount=3))";
+
+        api.articles().create_article(my_channel_id, create_request);
+
+        //print_article_info(article);
+
+        //auto [someone_profile, _] = api.profiles().get_profile(ProfileID(171123));
     
         std::vector<EpisodeType::Ptr> types = api.episodes().get_release_types(rel_id);
         std::vector<EpisodeSource::Ptr> sources = api.episodes().get_release_sources(rel_id, types[0]->id);
@@ -154,8 +193,6 @@ int main() {
                 std::cout << "Failed to get urls" << std::endl;
             }
         }
-
-        std::cout << "Profile" << std::endl;
     }
     catch (const GenericReleaseError& e) {
         std::cout << e.what() << ". Code: " << e.get_code() << "\n";

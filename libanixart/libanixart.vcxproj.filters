@@ -10,9 +10,6 @@
     <Filter Include="Parsers">
       <UniqueIdentifier>{f39e306a-357c-4aa0-bffb-a05f89cd4b4c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Tests">
-      <UniqueIdentifier>{f15c91ff-31bc-473f-8fdc-967b755efb44}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Tools">
       <UniqueIdentifier>{d0bbbc19-c355-416b-b48e-e4104d073dbe}</UniqueIdentifier>
     </Filter>
@@ -43,9 +40,6 @@
       <Filter>Public</Filter>
     </ClCompile>
     <ClCompile Include="src\ApiAuth.cpp">
-      <Filter>Public</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ApiCollection.cpp">
       <Filter>Public</Filter>
     </ClCompile>
     <ClCompile Include="src\ApiEpisodes.cpp">
@@ -84,12 +78,18 @@
     <ClCompile Include="src\ApiRequestsAuth.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="src\ApiArticles.cpp">
+      <Filter>Public</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ApiCollections.cpp">
+      <Filter>Public</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Random.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\iOSPlatform.mm">
-      <Filter>Misc</Filter>
-    </None>
-    <None Include="src\ApiRequestsAuth.cpp.example">
       <Filter>Misc</Filter>
     </None>
   </ItemGroup>
@@ -101,9 +101,6 @@
       <Filter>Public</Filter>
     </ClInclude>
     <ClInclude Include="include\anixart\ApiAuth.hpp">
-      <Filter>Public</Filter>
-    </ClInclude>
-    <ClInclude Include="include\anixart\ApiCollection.hpp">
       <Filter>Public</Filter>
     </ClInclude>
     <ClInclude Include="include\anixart\ApiEpisodes.hpp">
@@ -168,6 +165,24 @@
     </ClInclude>
     <ClInclude Include="include\anixart\ApiRequestsCoreTypes.hpp">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\anixart\Variant.hpp">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="include\anixart\Serializable.hpp">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="include\anixart\MacroDefs.hpp">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="include\anixart\ApiArticles.hpp">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\anixart\ApiCollections.hpp">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\anixart\Random.hpp">
+      <Filter>Tools</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

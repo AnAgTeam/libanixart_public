@@ -131,6 +131,10 @@ namespace anixart::json {
 		return CachingJsonValue(_array[index], _shared_cache);
 	}
 
+	size_t CachingJsonArray::size() {
+		return _array.size();
+	}
+
 	CachingJsonArray::operator JsonArray& () {
 		return _array;
 	}

@@ -17,11 +17,20 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Tests|Win32">
+      <Configuration>Tests</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Tests|x64">
+      <Configuration>Tests</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Api.cpp" />
+    <ClCompile Include="src\ApiArticles.cpp" />
     <ClCompile Include="src\ApiAuth.cpp" />
-    <ClCompile Include="src\ApiCollection.cpp" />
+    <ClCompile Include="src\ApiCollections.cpp" />
     <ClCompile Include="src\ApiEpisodes.cpp" />
     <ClCompile Include="src\ApiErrors.cpp" />
     <ClCompile Include="src\ApiPageableRequests.cpp" />
@@ -39,15 +48,16 @@
     <ClCompile Include="src\Parser.cpp" />
     <ClCompile Include="src\Parsers.cpp" />
     <ClCompile Include="src\Platform.cpp" />
+    <ClCompile Include="src\Random.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\ApiRequestsAuth.cpp.example" />
     <None Include="src\iOSPlatform.mm" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\anixart\Api.hpp" />
+    <ClInclude Include="include\anixart\ApiArticles.hpp" />
     <ClInclude Include="include\anixart\ApiAuth.hpp" />
-    <ClInclude Include="include\anixart\ApiCollection.hpp" />
+    <ClInclude Include="include\anixart\ApiCollections.hpp" />
     <ClInclude Include="include\anixart\ApiEpisodes.hpp" />
     <ClInclude Include="include\anixart\ApiErrorCodes.hpp" />
     <ClInclude Include="include\anixart\ApiErrors.hpp" />
@@ -65,10 +75,14 @@
     <ClInclude Include="include\anixart\CachingJson.hpp" />
     <ClInclude Include="include\anixart\KodikParser.hpp" />
     <ClInclude Include="include\anixart\LibriaParser.hpp" />
+    <ClInclude Include="include\anixart\MacroDefs.hpp" />
     <ClInclude Include="include\anixart\Parser.hpp" />
     <ClInclude Include="include\anixart\Parsers.hpp" />
     <ClInclude Include="include\anixart\Platform.hpp" />
+    <ClInclude Include="include\anixart\Random.hpp" />
+    <ClInclude Include="include\anixart\Serializable.hpp" />
     <ClInclude Include="include\anixart\StrongTypedef.hpp" />
+    <ClInclude Include="include\anixart\Variant.hpp" />
     <ClInclude Include="include\anixart\Version.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -85,6 +99,12 @@
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tests|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -93,6 +113,12 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tests|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
@@ -113,10 +139,16 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Tests|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Tests|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -127,11 +159,28 @@
     <IncludePath>$(SolutionDir)libnetsess\libnetsess\include;$(SolutionDir)include;$(IncludePath);$(ProjectDir)include</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration)\;$(SolutionDir)lib\debug\win_x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tests|x64'">
+    <IncludePath>$(SolutionDir)libnetsess\libnetsess\include;$(SolutionDir)include;$(IncludePath);$(ProjectDir)include</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration)\;$(SolutionDir)lib\debug\win_x64;$(LibraryPath)</LibraryPath>
+    <TargetName>$(ProjectName)-TESTS</TargetName>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)libnetsess\libnetsess\include;$(SolutionDir)include;$(IncludePath);$(ProjectDir)include</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration)\;$(SolutionDir)lib\release\win_x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tests|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
@@ -164,6 +213,21 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libaanetwork.lib;boost_container-vc143-mt-gd-x64-1_85.lib;boost_json-vc143-mt-gd-x64-1_85.lib;boost_regex-vc143-mt-gd-x64-1_85.lib;boost_system-vc143-mt-gd-x64-1_85.lib;curlpp.lib;libcurl-d.lib;zlibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Tests|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;LIBANIXART_TESTS_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>

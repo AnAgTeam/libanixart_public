@@ -11,7 +11,7 @@ namespace anixart {
 	}
 
 	std::string get_product_model() {
-		NSString* model = [[UIDevice currentDevice] name];
+		NSString* model = [[UIDevice currentDevice] model];
 		return std::string([model UTF8String], [model lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
 	}
 	

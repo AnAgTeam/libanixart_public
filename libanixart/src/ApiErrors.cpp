@@ -32,6 +32,8 @@ namespace anixart {
     DECLARE_ERROR_MESSAGE(ApiReleaseRequestError, "libanixart release request error")
     ApiReportRequestError::ApiReportRequestError(int64_t code) : ApiRequestError(code) {}
     DECLARE_ERROR_MESSAGE(ApiReportRequestError, "libanixart report request error")
+    ApiArticleRequestError::ApiArticleRequestError(int64_t code) : ApiRequestError(code) {}
+    DECLARE_ERROR_MESSAGE(ApiArticleRequestError, "libanixart report article error")
 
     DECLARE_TEMPLATE_ERROR_MESSAGE(GenericAuthError, "libanixart generic auth error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(GenericBookmarksError, "libanixart generic bookmarks error")
@@ -39,6 +41,7 @@ namespace anixart {
     DECLARE_TEMPLATE_ERROR_MESSAGE(GenericProfileError, "libanixart generic profile error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(GenericReleaseError, "libanixart generic release error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(GenericRequestError, "libanixart generic request error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(GenericArticleError, "libanixart generic article error")
 
     DECLARE_TEMPLATE_ERROR_MESSAGE(SignUpError, "libanixart sign up error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(ResendError, "libanixart email resend error")
@@ -55,18 +58,12 @@ namespace anixart {
     DECLARE_TEMPLATE_ERROR_MESSAGE(BookmarksExportError, "libanixart bookmarks export error")
 
     DECLARE_TEMPLATE_ERROR_MESSAGE(GetCollectionError, "libanixart collection get error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(CollectionReportError, "libanixart collection report error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(CreateEditCollectionError, "libanixart create/edit colletion error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(RemoveCollectionError, "libanixart Remove colletion error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(EditImageCollection, "libanixart edit image colletion error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(FavoriteCollectionAddError, "libanixart favorite collection add error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(FavoriteCollectionRemoveError, "libanixart favorite collection Remove error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(ReleaseAddCollectionError, "libanixart release add collection error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(CommentAddError, "libanixart comment add error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(CommentRemoveError, "libanixart comment Remove error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(CommentEditError, "libanixart comment edit error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(CommentReportError, "libanixart comment report error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(CommentVoteError, "libanixart comment vote error")
 
     DECLARE_TEMPLATE_ERROR_MESSAGE(ChangeEmailConfirmError, "libanixart chenge email confirm error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(ChangeEmailError, "libanixart change email error")
@@ -75,29 +72,39 @@ namespace anixart {
     DECLARE_TEMPLATE_ERROR_MESSAGE(ChangePasswordError, "libanixart change password error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(GoogleBindError, "libanixart google bind error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(GoogleUnbindError, "libanixart google unbind error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(ProfilePreferenceError, "libanixart profile preference error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(ProfileSocialError, "libanixart profile social error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(RemoveFriendRequestError, "libanixart remove friend request error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(SendFriendRequestError, "libanixart send friend request error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(SocialEditError, "libanixart social edit error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(VkBindError, "libanixart vk bind error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(VkUnbindError, "libanixart vk unbind error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(AddToBlockListError, "libanixart add to block list error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(RemoveFromBlockListError, "libanixart remove from block list  error")
 
-    DECLARE_TEMPLATE_ERROR_MESSAGE(RemoveVoteReleaseError, "libanixart Remove vote release error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(ReleaseReportError, "libanixart release report error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(ReleaseError, "libanixart release error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(EpisodeError, "libanixart episode error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(EpisodeTargetError, "libanixart episode target error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(EpisodeUnwatchError, "libanixart episode unwatch error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(EpisodeWatchError, "libanixart episode watch error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(SourcesError, "libanixart sources error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(TypesError, "libanixart types error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(ReleaseVideosError, "libanixart release videos error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(ReleaseVideoAppealError, "libanixart release video appeal error")
-    DECLARE_TEMPLATE_ERROR_MESSAGE(ReleaseVideoCategoriesError, "libanixart release video categories error")
+
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ArticleError, "libanixart article error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ArticleCreateEditError, "libanixart article create/edit error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ArticleRemoveError, "libanixart article remove error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ArticleEditorAvailableError, "libanixart article editor available error")
+
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ArticleSuggestionRemoveError, "libanixart article suggestion remove error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ArticleSuggestionPublishError, "libanixart article suggestion publish error")
+
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ChannelError, "libanixart channel error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(BlogCreateError, "libanixart blog create error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ChannelBlockError, "libanixart channel block error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ChannelCreateEditError, "libanixart channel create/edit error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ChannelPermissionManageError, "libanixart channel permission manage error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ChannelSubscribeError, "libanixart channel subscribe error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ChannelUnsubscribeError, "libanixart channel unsubscribe error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(ChannelUploadCoverAvatarError, "libanixart channel upload cover/avatar error")
+
+    DECLARE_TEMPLATE_ERROR_MESSAGE(CommentAddError, "libanixart comment add error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(CommentRemoveError, "libanixart comment Remove error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(CommentEditError, "libanixart comment edit error")
+    DECLARE_TEMPLATE_ERROR_MESSAGE(CommentVoteError, "libanixart comment vote error")
 
     DECLARE_TEMPLATE_ERROR_MESSAGE(ReportError, "libanixart report error")
     DECLARE_TEMPLATE_ERROR_MESSAGE(PageableError, "libanixart pageable error")
+
+
 };
